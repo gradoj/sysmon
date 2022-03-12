@@ -1,8 +1,29 @@
 import back, click
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request
+import logging
+from python_on_whales import DockerClient
 
+logging.basicConfig(level=logging.DEBUG)
 
 main = Flask(__name__)
+
+@main.route("/disco",methods=["POST","GET"]) 
+def disco(): 
+    logging.info('Disco mode called')
+    if request.method == "POST": 
+        packet_num = request.form.get("packet_num")
+        packet_delay = request.form.get("packet_delay")
+        print('packet_num', packet_num)
+        print('packet_delay', packet_delay)
+    
+        # kick off disco mode. want to pass in packet_num and delay
+        docker = DockerClient(compose_files=["../discoclient/docker-compose.yml"])
+        try:
+            docker.compose.up(detach=True)
+        except:
+            docker.compose.build()
+            docker.compose.up(detach=True)
+    return 'DiscoStarted'#render_template('home.html') 
 
 
 @main.route("/termproc/<prociden>/", methods=["GET"])
@@ -28,7 +49,6 @@ def resmproc(prociden):
     back.ResumeSingleProcess(prociden)
     return "Resumed"
 
-
 @main.route("/fetcinfo/", methods=["GET"])
 def fetcinfo():
     virtdata = back.GetVirtualMemoryData()
@@ -43,10 +63,13 @@ def fetcinfo():
     senstemp = back.GetSensorsTemperature()
     fanspeed = back.GetSensorsFanSpeed()
     battstat = back.GetSensorsBatteryStatus()
+    minernam = 'little-blue-donkey'
+    blockhgt = 42
     retnjson = jsonify(virtdata=virtdata, swapinfo=swapinfo, cputimes=cputimes,
                        cpuprcnt=cpuprcnt, cpustats=cpustats, cpuclock=cpuclock,
                        diousage=diousage, netusage=netusage, procinfo=procinfo,
-                       senstemp=senstemp, fanspeed=fanspeed, battstat=battstat)
+                       senstemp=senstemp, fanspeed=fanspeed, battstat=battstat,
+                       minernam=minernam, blockhgt=blockhgt)
     return retnjson
 
 
@@ -71,7 +94,7 @@ def custpage(thmcolor="maroon"):
 
 
 @click.command()
-@click.option("-p", "--portdata", "portdata", help="Set the port value [0-65536]", default="9696")
+@click.option("-p", "--portdata", "portdata", help="Set the port value [0-65536]", default="3001")
 @click.option("-6", "--ipprotv6", "netprotc", flag_value="ipprotv6", help="Start the server on an IPv6 address")
 @click.option("-4", "--ipprotv4", "netprotc", flag_value="ipprotv4", help="Start the server on an IPv4 address")
 @click.version_option(version="0.1.0", prog_name="WebStation SYSMON by t0xic0der")
@@ -85,7 +108,7 @@ def mainfunc(portdata, netprotc):
     elif netprotc == "ipprotv4":
         print(" * IP version  : 4")
         netpdata = "0.0.0.0"
-    main.run(port=portdata, host=netpdata)
+    main.run(port=portdata, host=netpdata)#, debug=True)
 
 
 if __name__ == "__main__":
