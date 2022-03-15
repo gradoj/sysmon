@@ -1079,7 +1079,10 @@
                 }, 
                 success:function() 
                 { 
-                //alert('saved'); 
+                //alert('saved');
+                    toastr.success("<span class='normelem'>Disco Mode Running</span>", "", {
+                            "progressBar": true
+                        })
                 } 
             }) 
             }); 

@@ -102,6 +102,7 @@ def mainfunc(portdata, netprotc):
     print(" * Starting WebStation SYSMON by t0xic0der...")
     print(" * Port number : " + str(portdata))
     netpdata = ""
+    netprotc = "ipprotv4"
     if netprotc == "ipprotv6":
         print(" * IP version  : 6")
         netpdata = "::"
